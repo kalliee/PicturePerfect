@@ -1,8 +1,10 @@
 package com.shortcircuit.imagemap;
 
+import java.io.File;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -20,6 +22,9 @@ public class ImageMap extends JavaPlugin{
         if(maps != null){
             for(String key : maps){
                 MapView map = Bukkit.getMap(Short.parseShort(key));
+                if(map == null){
+                    map = Bukkit.createMap(Bukkit.getWorlds().get(0));
+                }
                 boolean dirty = true;
                 for(MapRenderer render : map.getRenderers()){
                     if(render instanceof ImageMapRenderer){
@@ -32,42 +37,53 @@ public class ImageMap extends JavaPlugin{
         }
     }
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
-        Player player = (Player)sender;
-        if(commandLabel.equalsIgnoreCase("image")){
-            reloadConfig();
-            if(player.getItemInHand().getType().equals(Material.MAP)){
-                /*
-                MapView map = Bukkit.getMap(player.getItemInHand().getDurability());
-                for(MapRenderer render : map.getRenderers()){
-                    map.removeRenderer(render);
+        if(sender instanceof Player){
+            Player player = (Player)sender;
+            if(commandLabel.equalsIgnoreCase("image")){
+                if(args.length < 1){
+                    player.sendMessage(ChatColor.RED + "Too few arguments");
+                    return true;
                 }
-                try{
-                    BufferedImage image = ImageIO.read(new URL(args[0]));
-                    ImageMapRenderer derp = new ImageMapRenderer(image);
-                    map.addRenderer(derp);
-                    player.sendMap(map);
-                    derp.setRendered(true);
-                 */
-                getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.URL", args[0]);
-                getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.File", "null");
-                getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Dirty", true);
-                saveConfig();
-                /*
-                    player.sendMessage(ChatColor.GREEN + "Image rendered!");
+                if(args[0].equalsIgnoreCase("clean")){
+                    clean();
+                    return true;
                 }
-                catch(MalformedURLException e){
-                    player.sendMessage(ChatColor.RED + "Not a valid URL");
+                if(args[0].equalsIgnoreCase("remove")){
+                    if(player.getItemInHand().getType().equals(Material.MAP)){
+                        getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image", null);
+                        getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Dirty", true);
+                        saveConfig();
+                    }
+                    return true;
                 }
-                catch(UnknownHostException e){
-                    player.sendMessage(ChatColor.RED + "Image not found");
-                }
-                catch(IOException e){
-                    player.sendMessage(ChatColor.RED + "Something went wrong while retrieving the image");
-                }
-                 */
-            }            
-            return true;
+                if(player.getItemInHand().getType().equals(Material.MAP)){
+                    getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.URL", args[0]);
+                    getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.File", "plugins/ImageMap/Images/" + args[0]);
+                    getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Dirty", true);
+                    saveConfig();
+                }  
+                return true;
+            }
         }
         return false;
+    }
+    public void clean(){
+        reloadConfig();
+        Set<String> maps = getConfig().getConfigurationSection("ImageMaps").getKeys(false);
+        if(maps != null){
+            File directory = new File(getDataFolder() + "/Images");
+            for(File file : directory.listFiles()){
+                boolean toDelete = true;
+                for(String key : maps){
+                    if(getConfig().getString("ImageMaps." + key + ".Image.File").equalsIgnoreCase((file + "").replace("\\", "/"))){
+                        toDelete = false;
+                        break;
+                    }
+                }
+                if(toDelete){
+                    file.delete();
+                }
+            }
+        }
     }
 }

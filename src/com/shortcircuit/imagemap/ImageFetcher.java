@@ -32,13 +32,14 @@ public class ImageFetcher {
         System.setProperty("http.keepAlive", "false");
         try{
             URLConnection imageURL = new URL(image_url).openConnection();
+            imageURL.setConnectTimeout(500);
             /*
              * TODO: Limit input stream size
              */
             InputStream stream = imageURL.getInputStream();
-            String image_file = plugin.getDataFolder() + "/" + makeSafe(image_url);
+            String image_file = plugin.getDataFolder() + "/Images/" + makeSafe(image_url);
             Files.copy(stream, new File(image_file).toPath(), StandardCopyOption.REPLACE_EXISTING);
-            return image_file;
+            return image_file.replace("\\", "/");
         }
         catch(Exception e){
             e.printStackTrace();
@@ -46,15 +47,11 @@ public class ImageFetcher {
         }
     }
     public boolean hasImage(String image_url){
-        //String type = image_url.split(".")[1];
-        //String image_file = plugin.getDataFolder() + "/" + StringUtils.replaceChars(image_url, "./\\:*<>|?\"", "-") + type;
         File file = new File(image_url);
         return file.exists();
     }
     public BufferedImage loadImage(String image_url){
         try{
-            //String type = image_url.split(".")[1];
-            //String image_file = plugin.getDataFolder() + "/" + StringUtils.replaceChars(image_url, "./\\:*<>|?\"", "-") + type;
             return ImageIO.read(new File(image_url));
         }
         catch(Exception e){

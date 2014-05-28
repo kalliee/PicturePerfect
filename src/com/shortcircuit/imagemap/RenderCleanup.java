@@ -29,9 +29,19 @@ public class RenderCleanup extends BukkitRunnable{
                     MapView map = Bukkit.getMap(Short.parseShort(key));
                     BufferedImage image = null;
                     String file = plugin.getConfig().getString("ImageMaps." + key + ".Image.File");
+                    if(file == null){
+                        plugin.getConfig().set("ImageMaps." + key, null);
+                        plugin.saveConfig();
+                        break;
+                    }
                     if(!fetcher.hasImage(file)){
                         file = fetcher.saveImage(plugin.getConfig().getString("ImageMaps." + key + ".Image.URL"));
                         plugin.getConfig().set("ImageMaps." + key + ".Image.File", file);
+                    }
+                    if(file == null){
+                        plugin.getConfig().set("ImageMaps." + key, null);
+                        plugin.saveConfig();
+                        break;
                     }
                     image = fetcher.loadImage(file);
                     for(MapRenderer render : map.getRenderers()){
@@ -49,5 +59,4 @@ public class RenderCleanup extends BukkitRunnable{
             }
         }
     }
-
 }

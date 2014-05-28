@@ -6,3 +6,11 @@ main: com.shortcircuit.imagemap.ImageMap
 commands:
   image:
     description: Render an image to a map
+    usage: /<command> [URL]
+  image:
+    description: Delete unused images from the images folder
+    usage: /<command> clean
+  image:
+    description: Remove an image from a map
+    usage: /<command> remove
+  
