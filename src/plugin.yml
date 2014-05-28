@@ -1,0 +1,8 @@
+name: ImageMap
+version: 1.0
+author: ShortCircuit908
+website: http://dev.bukkit.org/bukkit-plugins/ImageMap/
+main: com.shortcircuit.imagemap.ImageMap
+commands:
+  image:
+    description: Render an image to a map
