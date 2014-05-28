@@ -26,11 +26,13 @@ public class MapListener implements Listener{
             plugin.reloadConfig();
             if(item.getType().equals(Material.MAP) && plugin.getConfig().contains("ImageMaps." + item.getDurability())){
                 MapView map = Bukkit.getMap(item.getDurability());
+                // If the map does not have the appropriate renderer, mark it as dirty
                 for(MapRenderer render : map.getRenderers()){
                     if(render instanceof ImageMapRenderer){
                         return;
                     }
                 }
+                // Mark the map as dirty
                 plugin.getConfig().set("ImageMaps." + item.getDurability() + ".Dirty", true);
                 plugin.saveConfig();
             }
@@ -42,15 +44,14 @@ public class MapListener implements Listener{
         if(maps != null){
             for(String key : maps){
                 MapView map = Bukkit.getMap(Short.parseShort(key));
-                boolean dirty = true;
+                // If the map does not have the appropriate renderer, mark it as dirty
                 for(MapRenderer render : map.getRenderers()){
                     if(render instanceof ImageMapRenderer){
-                        ImageMapRenderer renderer = (ImageMapRenderer)render;
-                        renderer.setRendered(false);
-                        dirty = false;;
+                        return;
                     }
                 }
-                plugin.getConfig().set("ImageMaps." + key + ".Dirty", dirty);
+                // Mark the map as dirty
+                plugin.getConfig().set("ImageMaps." + key + ".Dirty", true);
                 plugin.saveConfig();
             }
         }

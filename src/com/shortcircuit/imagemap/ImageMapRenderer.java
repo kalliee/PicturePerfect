@@ -14,6 +14,10 @@ public class ImageMapRenderer extends MapRenderer{
     public ImageMapRenderer(BufferedImage image){
         this.image = image;
     }
+    /*
+     * Only render the map once, to reduce server load
+     */ 
+
     @Override
     public void render(MapView arg0, MapCanvas arg1, Player arg2) {
         if(!isRendered){

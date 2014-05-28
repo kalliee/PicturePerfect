@@ -24,25 +24,30 @@ public class RenderCleanup extends BukkitRunnable{
         Set<String> maps = plugin.getConfig().getConfigurationSection("ImageMaps").getKeys(false);
         if(maps != null){
             for(String key : maps){
+                // Only render the map if it is marked as dirty
                 boolean dirty = plugin.getConfig().getBoolean("ImageMaps." + key + ".Dirty");
                 if(dirty){
                     MapView map = Bukkit.getMap(Short.parseShort(key));
                     BufferedImage image = null;
+                    // Attempt to get the filename of the linked image. If there is no file, remove the map
                     String file = plugin.getConfig().getString("ImageMaps." + key + ".Image.File");
                     if(file == null){
                         plugin.getConfig().set("ImageMaps." + key, null);
                         plugin.saveConfig();
                         break;
                     }
+                    // If the image cannot be found, attempt to download it
                     if(!fetcher.hasImage(file)){
                         file = fetcher.saveImage(plugin.getConfig().getString("ImageMaps." + key + ".Image.URL"));
                         plugin.getConfig().set("ImageMaps." + key + ".Image.File", file);
                     }
+                    // If the image cannot be download, remove the map
                     if(file == null){
                         plugin.getConfig().set("ImageMaps." + key, null);
                         plugin.saveConfig();
                         break;
                     }
+                    // Otherwise, load the image and add the new renderer
                     image = fetcher.loadImage(file);
                     for(MapRenderer render : map.getRenderers()){
                         map.removeRenderer(render);
@@ -52,7 +57,7 @@ public class RenderCleanup extends BukkitRunnable{
                     for(Player player : Bukkit.getOnlinePlayers()){
                         player.sendMap(map);
                     }
-                    //renderer.setRendered(true);
+                    // Mark the map as clean
                     plugin.getConfig().set("ImageMaps." + key + ".Dirty", false);
                     plugin.saveConfig();
                 }
