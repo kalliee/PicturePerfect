@@ -37,7 +37,7 @@ public class ImageFetcher {
             return image_file.replace("\\", "/");
         }
         catch(Exception e){
-            e.printStackTrace();
+            //e.printStackTrace();
             return null;
         }
     }

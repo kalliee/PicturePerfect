@@ -1,10 +1,12 @@
 package com.shortcircuit.imagemap;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Set;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -44,23 +46,14 @@ public class ImageMap extends JavaPlugin{
         }
     }
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
-        if(sender instanceof Player){
-            Player player = (Player)sender;
-            if(commandLabel.equalsIgnoreCase("image")){
-                if(args.length < 1){
-                    player.sendMessage(ChatColor.RED + "Too few arguments");
-                    return true;
-                }
-                if(args[0].equalsIgnoreCase("clean")){
-                    if(player.hasPermission("ImageMap.Clean")){
-                        clean();
-                    }
-                    else{
-                        player.sendMessage(ChatColor.RED + "Insufficient permissions");
-                    }
-                    return true;
-                }
-                if(args[0].equalsIgnoreCase("remove")){
+        if(commandLabel.equalsIgnoreCase("image")){
+            if(args.length < 1){
+                sender.sendMessage(ChatColor.RED + "Too few arguments");
+                return true;
+            }
+            if(args[0].equalsIgnoreCase("remove")){
+                if(sender instanceof Player){
+                    Player player = (Player)sender;
                     if(player.hasPermission("ImageMap.Remove")){
                         if(player.getItemInHand().getType().equals(Material.MAP)){
                             // Mark an image map for removal
@@ -73,36 +66,68 @@ public class ImageMap extends JavaPlugin{
                     else{
                         player.sendMessage(ChatColor.RED + "Insufficient permissions");
                     }
-                    return true;
                 }
-                if(player.hasPermission("ImageMap.Create"))
-                    if(player.getItemInHand().getType().equals(Material.MAP)){
-                        try{
-                            URLConnection url = new URL(args[0]).openConnection();
-                            url.setConnectTimeout(500);
-                            if(player.hasPermission("ImageMap.Create.URL")){
-                                // Set the URL to download the image
-                                getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.URL", args[0]);
-                                getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.File", "DownloadQueued");
-                            }
-                            else{
-                                player.sendMessage(ChatColor.RED + "You may not use an online image");
-                                return true;
-                            }
+            }
+            else if(args[0].equalsIgnoreCase("list")){
+                if(sender.hasPermission("ImageMap.List")){
+                    File directory = new File(getDataFolder() + "/Images");
+                    sender.sendMessage(ChatColor.GREEN + "Available images:");
+                    File[] files = directory.listFiles();
+                    for(int i = 0; i < files.length; i++){
+                        if(files[i].isDirectory()){
+                            File[] nested = files[i].listFiles();
+                            files = (File[])ArrayUtils.removeElement(files, files[i]);
+                            files = (File[])ArrayUtils.addAll(files, nested);
                         }
-                        catch(Exception e){
-                            getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.URL", null);
-                            getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.File", "plugins/ImageMap/Images/" + args[0]);
+                        sender.sendMessage(ChatColor.GREEN + "[" + (i + 1) + "] " + ChatColor.LIGHT_PURPLE + files[i].getPath().replace("plugins\\ImageMap\\Images\\", ""));
+                    }
+                }
+                else{
+                    sender.sendMessage(ChatColor.RED + "Insufficient permissions");
+                }
+            }
+            else if(args[0].equalsIgnoreCase("clean")){
+                if(sender.hasPermission("ImageMap.Clean")){
+                    clean();
+                }
+                else{
+                    sender.sendMessage(ChatColor.RED + "Insufficient permissions");
+                }
+            }
+            else{
+                if(sender instanceof Player){
+                    Player player = (Player)sender;
+                    if(player.hasPermission("ImageMap.Create")){
+                        if(player.getItemInHand().getType().equals(Material.MAP)){
+                            // If the 
+                            try{
+                                URLConnection url = new URL(args[0]).openConnection();
+                                url.setConnectTimeout(500);
+                                if(player.hasPermission("ImageMap.Create.URL")){
+                                    // Set the URL to download the image
+                                    getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.URL", args[0]);
+                                    getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.File", "DownloadQueued");
+                                }
+                                else{
+                                    player.sendMessage(ChatColor.RED + "You may not use an online image");
+                                    return true;
+                                }
+                            }
+                            catch(IOException e){
+                                getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.URL", null);
+                                getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.File", "plugins/ImageMap/Images/" + args[0]);
+                            }
+                            // Mark the map as dirty
+                            getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Dirty", true);
+                            saveConfig();
                         }
-                        // Mark the map as dirty
-                        getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Dirty", true);
-                        saveConfig();
                     }
                     else{
                         player.sendMessage(ChatColor.RED + "Insufficient permissions");
                     }
-                return true;
+                }
             }
+            return true;
         }
         return false;
     }
@@ -113,11 +138,17 @@ public class ImageMap extends JavaPlugin{
         if(maps != null){
             // Get all the image files in the Images folder
             File directory = new File(getDataFolder() + "/Images");
-            for(File file : directory.listFiles()){
+            File[] files = directory.listFiles();
+            for(int i = 0; i < files.length; i++){
                 boolean toDelete = true;
+                File file = files[i];
+                if(file.isDirectory()){
+                    files = (File[])ArrayUtils.addAll(files, file.listFiles());
+                    toDelete = false;
+                }
                 for(String key : maps){
                     // If the image is linked to a map, don't delete it
-                    if(getConfig().getString("ImageMaps." + key + ".Image.File").equalsIgnoreCase((file + "").replace("\\", "/"))){
+                    if(getConfig().getString("ImageMaps." + key + ".Image.File").replace("\\", "/").equalsIgnoreCase((file + "").replace("\\", "/"))){
                         toDelete = false;
                         break;
                     }
