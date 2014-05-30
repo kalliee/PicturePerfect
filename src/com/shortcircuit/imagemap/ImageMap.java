@@ -133,6 +133,7 @@ public class ImageMap extends JavaPlugin{
     }
     // Delete any image files not linked to a map
     public void clean(){
+        Bukkit.getLogger().info("[ImageMap] Initiating image cleanup");
         reloadConfig();
         Set<String> maps = getConfig().getConfigurationSection("ImageMaps").getKeys(false);
         if(maps != null){
@@ -155,9 +156,11 @@ public class ImageMap extends JavaPlugin{
                 }
                 // Delete the file
                 if(toDelete){
+                    Bukkit.getLogger().info("[ImageMap] Deleted " + (file + "").replace("\\", "/"));
                     file.delete();
                 }
             }
         }
+        Bukkit.getLogger().info("[ImageMap] Image cleanup complete");
     }
 }

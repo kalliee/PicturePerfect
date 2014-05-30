@@ -11,6 +11,7 @@ import org.bukkit.map.MapView;
 public class ImageMapRenderer extends MapRenderer{
     private BufferedImage image;
     private boolean isRendered = false;
+    private MapRenderer default_renderer;
     public ImageMapRenderer(BufferedImage image){
         this.image = image;
     }
@@ -30,5 +31,14 @@ public class ImageMapRenderer extends MapRenderer{
     }
     public boolean getRendered(){
         return isRendered;
+    }
+    /*
+     * We want to be able to return the map to it's original state once the image is removed
+     */
+    public MapRenderer getDefaultMapRenderer(){
+        return default_renderer;
+    }
+    public void setDefaultMapRenderer(MapRenderer default_renderer){
+        this.default_renderer = default_renderer;
     }
 }
