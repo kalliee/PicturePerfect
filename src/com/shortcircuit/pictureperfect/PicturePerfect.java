@@ -1,4 +1,4 @@
-package com.shortcircuit.imagemap;
+package com.shortcircuit.pictureperfect;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +17,7 @@ import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 import org.bukkit.plugin.java.JavaPlugin;
 @SuppressWarnings("deprecation")
-public class ImageMap extends JavaPlugin{
+public class PicturePerfect extends JavaPlugin{
     public void onEnable(){
         saveDefaultConfig();
         // Start the cleanup task
@@ -54,7 +54,7 @@ public class ImageMap extends JavaPlugin{
             if(args[0].equalsIgnoreCase("remove")){
                 if(sender instanceof Player){
                     Player player = (Player)sender;
-                    if(player.hasPermission("ImageMap.Remove")){
+                    if(player.hasPermission("PicturePerfect.Remove")){
                         if(player.getItemInHand().getType().equals(Material.MAP)){
                             // Mark an image map for removal
                             getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image", null);
@@ -69,9 +69,9 @@ public class ImageMap extends JavaPlugin{
                 }
             }
             else if(args[0].equalsIgnoreCase("list")){
-                if(sender.hasPermission("ImageMap.List")){
+                if(sender.hasPermission("PicturePerfect.List")){
                     File directory = new File(getDataFolder() + "/Images");
-                    sender.sendMessage(ChatColor.GREEN + "Available images:");
+                    sender.sendMessage(ChatColor.GREEN + "[PicturePerfect] Available images:");
                     File[] files = directory.listFiles();
                     for(int i = 0; i < files.length; i++){
                         if(files[i].isDirectory()){
@@ -87,7 +87,7 @@ public class ImageMap extends JavaPlugin{
                 }
             }
             else if(args[0].equalsIgnoreCase("clean")){
-                if(sender.hasPermission("ImageMap.Clean")){
+                if(sender.hasPermission("PicturePerfect.Clean")){
                     clean();
                 }
                 else{
@@ -97,13 +97,13 @@ public class ImageMap extends JavaPlugin{
             else{
                 if(sender instanceof Player){
                     Player player = (Player)sender;
-                    if(player.hasPermission("ImageMap.Create")){
+                    if(player.hasPermission("PicturePerfect.Create")){
                         if(player.getItemInHand().getType().equals(Material.MAP)){
                             // If the 
                             try{
                                 URLConnection url = new URL(args[0]).openConnection();
                                 url.setConnectTimeout(500);
-                                if(player.hasPermission("ImageMap.Create.URL")){
+                                if(player.hasPermission("PicturePerfect.Create.URL")){
                                     // Set the URL to download the image
                                     getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.URL", args[0]);
                                     getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.File", "DownloadQueued");
@@ -133,8 +133,9 @@ public class ImageMap extends JavaPlugin{
     }
     // Delete any image files not linked to a map
     public void clean(){
-        Bukkit.getLogger().info("[ImageMap] Initiating image cleanup");
+        Bukkit.getLogger().info("[PicturePerfect] Initiating image cleanup");
         reloadConfig();
+        int count = 0;
         Set<String> maps = getConfig().getConfigurationSection("ImageMaps").getKeys(false);
         if(maps != null){
             // Get all the image files in the Images folder
@@ -156,11 +157,12 @@ public class ImageMap extends JavaPlugin{
                 }
                 // Delete the file
                 if(toDelete){
-                    Bukkit.getLogger().info("[ImageMap] Deleted " + (file + "").replace("\\", "/"));
+                    Bukkit.getLogger().info("[PicturePerfect] Deleted " + (file + "").replace("\\", "/"));
                     file.delete();
+                    count++;
                 }
             }
         }
-        Bukkit.getLogger().info("[ImageMap] Image cleanup complete");
+        Bukkit.getLogger().info("[PicturePerfect] Image cleanup complete (" + count + ") images deleted");
     }
 }

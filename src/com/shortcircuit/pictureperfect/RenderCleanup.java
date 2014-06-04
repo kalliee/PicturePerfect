@@ -1,4 +1,4 @@
-package com.shortcircuit.imagemap;
+package com.shortcircuit.pictureperfect;
 
 import java.awt.image.BufferedImage;
 import java.util.Set;
@@ -87,7 +87,7 @@ public class RenderCleanup extends BukkitRunnable{
         }
         long end_time = System.currentTimeMillis();
         if(found_dirty){
-            Bukkit.getLogger().info("[ImageMap] Rendered " + maps_rendered + " dirty maps (" + (end_time - start_time) + "ms)");
+            Bukkit.getLogger().info("[PicturePerfect] Rendered " + maps_rendered + " dirty maps (" + (end_time - start_time) + "ms)");
         }
     }
 }

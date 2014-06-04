@@ -1,4 +1,4 @@
-package com.shortcircuit.imagemap;
+package com.shortcircuit.pictureperfect;
 
 import java.awt.image.BufferedImage;
 

@@ -1,10 +1,10 @@
-name: ImageMap
-version: 1.0
+name: PicturePerfect
+version: 1.1
 author: ShortCircuit908
-website: http://dev.bukkit.org/bukkit-plugins/ImageMap/
-main: com.shortcircuit.imagemap.ImageMap
+website: http://dev.bukkit.org/bukkit-plugins/PicturePerfect/
+main: com.shortcircuit.pictureperfect.PicturePerfect
 commands:
   image:
-    description: Render an image to a map
-    usage: /<command> [clean|URL]
+    description: Base command
+    usage: /<command> [clean|list|remove|URL|file_name]
   
