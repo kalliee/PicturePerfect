@@ -30,7 +30,6 @@ public class ImageFetcher {
              * TODO: Limit input stream size
              */
             InputStream stream = imageURL.getInputStream();
-            // Why the fuck is "." a regex character?
             String type = "." + image_url.split("\\.")[image_url.split("\\.").length - 1];
             String image_file = plugin.getDataFolder() + "/Images/" + makeSafe(image_url) + type;
             Files.copy(stream, new File(image_file).toPath(), StandardCopyOption.REPLACE_EXISTING);

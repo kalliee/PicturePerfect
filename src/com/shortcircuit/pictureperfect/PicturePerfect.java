@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -12,37 +13,69 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 import org.bukkit.plugin.java.JavaPlugin;
 @SuppressWarnings("deprecation")
 public class PicturePerfect extends JavaPlugin{
+    public File file;
+    public FileConfiguration image_file;
     public void onEnable(){
+        file = new File(this.getDataFolder() + "/Images.yml");
+        boolean exists = false;
+        try{
+            exists = file.createNewFile();
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
+        image_file = YamlConfiguration.loadConfiguration(file);
+        if(exists){
+            image_file.set("ImageMaps", new Object[]{});
+            try{
+                image_file.save(file);
+            }
+            catch(IOException e){
+                e.printStackTrace();
+            }
+        }
         saveDefaultConfig();
         // Start the cleanup task
         getServer().getScheduler().scheduleAsyncRepeatingTask(this, new RenderCleanup(this), 100L, 100L);
         // Register the map listener
         getServer().getPluginManager().registerEvents(new MapListener(this), this);
         // Force-render each map
-        Set<String> maps = getConfig().getConfigurationSection("ImageMaps").getKeys(false);
-        if(maps != null){
-            for(String key : maps){
-                MapView map = Bukkit.getMap(Short.parseShort(key));
-                if(map == null){
-                    // Create maps for any outstanding image maps
-                    map = Bukkit.createMap(Bukkit.getWorlds().get(0));
-                }
-                // Only mark the map as dirty if it doesn't already have a renderer on it
-                boolean dirty = true;
-                for(MapRenderer render : map.getRenderers()){
-                    if(render instanceof ImageMapRenderer){
-                        dirty = false;;
+        try{
+            Set<String> maps = image_file.getConfigurationSection("ImageMaps").getKeys(false);
+            if(maps != null){
+                for(String key : maps){
+                    MapView map = Bukkit.getMap(Short.parseShort(key));
+                    if(map == null){
+                        // Create maps for any outstanding image maps
+                        map = Bukkit.createMap(Bukkit.getWorlds().get(0));
+                    }
+                    // Only mark the map as dirty if it doesn't already have a renderer on it
+                    boolean dirty = true;
+                    for(MapRenderer render : map.getRenderers()){
+                        if(render instanceof ImageMapRenderer){
+                            dirty = false;;
+                        }
+                    }
+                    image_file.set("ImageMaps." + key + ".Dirty", dirty);
+                    try{
+                        image_file.save(file);
+                    }
+                    catch(IOException e){
+                        e.printStackTrace();
                     }
                 }
-                getConfig().set("ImageMaps." + key + ".Dirty", dirty);
-                saveConfig();
             }
+        }
+        catch(NullPointerException e){
+
         }
     }
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
@@ -57,10 +90,15 @@ public class PicturePerfect extends JavaPlugin{
                     if(player.hasPermission("PicturePerfect.Remove")){
                         if(player.getItemInHand().getType().equals(Material.MAP)){
                             // Mark an image map for removal
-                            getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image", null);
+                            image_file.set("ImageMaps." + player.getItemInHand().getDurability() + ".Image", null);
                             // Mark the map as dirty
-                            getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Dirty", true);
-                            saveConfig();
+                            image_file.set("ImageMaps." + player.getItemInHand().getDurability() + ".Dirty", true);
+                            try{
+                                image_file.save(file);
+                            }
+                            catch(IOException e){
+                                e.printStackTrace();
+                            }
                         }
                     }
                     else{
@@ -105,8 +143,8 @@ public class PicturePerfect extends JavaPlugin{
                                 url.setConnectTimeout(500);
                                 if(player.hasPermission("PicturePerfect.Create.URL")){
                                     // Set the URL to download the image
-                                    getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.URL", args[0]);
-                                    getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.File", "DownloadQueued");
+                                    image_file.set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.URL", args[0]);
+                                    image_file.set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.File", "DownloadQueued");
                                 }
                                 else{
                                     player.sendMessage(ChatColor.RED + "You may not use an online image");
@@ -114,12 +152,17 @@ public class PicturePerfect extends JavaPlugin{
                                 }
                             }
                             catch(IOException e){
-                                getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.URL", null);
-                                getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.File", "plugins/ImageMap/Images/" + args[0]);
+                                image_file.set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.URL", null);
+                                image_file.set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.File", "plugins/ImageMap/Images/" + args[0]);
                             }
                             // Mark the map as dirty
-                            getConfig().set("ImageMaps." + player.getItemInHand().getDurability() + ".Dirty", true);
-                            saveConfig();
+                            image_file.set("ImageMaps." + player.getItemInHand().getDurability() + ".Dirty", true);
+                            try{
+                                image_file.save(file);
+                            }
+                            catch(IOException e){
+                                e.printStackTrace();
+                            }
                         }
                     }
                     else{
@@ -134,9 +177,15 @@ public class PicturePerfect extends JavaPlugin{
     // Delete any image files not linked to a map
     public void clean(){
         Bukkit.getLogger().info("[PicturePerfect] Initiating image cleanup");
-        reloadConfig();
+        image_file = YamlConfiguration.loadConfiguration(file);
         int count = 0;
-        Set<String> maps = getConfig().getConfigurationSection("ImageMaps").getKeys(false);
+        Set<String> maps = new HashSet<String>();
+        try{
+            maps = image_file.getConfigurationSection("ImageMaps").getKeys(false);
+        }
+        catch(NullPointerException e){
+            
+        }
         if(maps != null){
             // Get all the image files in the Images folder
             File directory = new File(getDataFolder() + "/Images");
@@ -150,14 +199,14 @@ public class PicturePerfect extends JavaPlugin{
                 }
                 for(String key : maps){
                     // If the image is linked to a map, don't delete it
-                    if(getConfig().getString("ImageMaps." + key + ".Image.File").replace("\\", "/").equalsIgnoreCase((file + "").replace("\\", "/"))){
+                    if(image_file.getString("ImageMaps." + key + ".Image.File").replace("\\", "/").equalsIgnoreCase((file + "").replace("\\", "/"))){
                         toDelete = false;
                         break;
                     }
                 }
                 // Delete the file
                 if(toDelete){
-                    Bukkit.getLogger().info("[PicturePerfect] Deleted " + (file + "").replace("\\", "/"));
+                    Bukkit.getLogger().info("[PicturePerfect] Deleted " + (file + "").replace("\\", "/").replace("plugins/PicturePerfect/Images/", ""));
                     file.delete();
                     count++;
                 }
