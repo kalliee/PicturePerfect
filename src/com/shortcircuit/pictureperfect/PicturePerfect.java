@@ -117,7 +117,7 @@ public class PicturePerfect extends JavaPlugin{
                             files = (File[])ArrayUtils.removeElement(files, files[i]);
                             files = (File[])ArrayUtils.addAll(files, nested);
                         }
-                        sender.sendMessage(ChatColor.GREEN + "[" + (i + 1) + "] " + ChatColor.LIGHT_PURPLE + files[i].getPath().replace("plugins\\ImageMap\\Images\\", ""));
+                        sender.sendMessage(ChatColor.GREEN + "[" + (i + 1) + "] " + ChatColor.LIGHT_PURPLE + files[i].getPath().replace(getDataFolder() + "\\Images\\", ""));
                     }
                 }
                 else{
@@ -153,7 +153,8 @@ public class PicturePerfect extends JavaPlugin{
                             }
                             catch(IOException e){
                                 image_file.set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.URL", null);
-                                image_file.set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.File", "plugins/ImageMap/Images/" + args[0]);
+                                image_file.set("ImageMaps." + player.getItemInHand().getDurability() + ".Image.File", (getDataFolder()
+                                        + "/Images/").replace("\\", "/") + args[0]);
                             }
                             // Mark the map as dirty
                             image_file.set("ImageMaps." + player.getItemInHand().getDurability() + ".Dirty", true);
@@ -212,6 +213,6 @@ public class PicturePerfect extends JavaPlugin{
                 }
             }
         }
-        Bukkit.getLogger().info("[PicturePerfect] Image cleanup complete (" + count + ") images deleted");
+        Bukkit.getLogger().info("[PicturePerfect] Image cleanup complete (" + count + " images deleted)");
     }
 }

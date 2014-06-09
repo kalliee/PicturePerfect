@@ -10,7 +10,6 @@ import java.nio.file.StandardCopyOption;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.plugin.Plugin;
 
 public class ImageFetcher {
@@ -31,7 +30,7 @@ public class ImageFetcher {
              */
             InputStream stream = imageURL.getInputStream();
             String type = "." + image_url.split("\\.")[image_url.split("\\.").length - 1];
-            String image_file = plugin.getDataFolder() + "/Images/" + makeSafe(image_url) + type;
+            String image_file = plugin.getDataFolder() + "/Images/" + makeSafe(image_url.replace(type, "")) + type;
             Files.copy(stream, new File(image_file).toPath(), StandardCopyOption.REPLACE_EXISTING);
             return image_file.replace("\\", "/");
         }
@@ -63,6 +62,10 @@ public class ImageFetcher {
      * Remove special characters from a file name
      */
     public String makeSafe(String original){
-        return StringUtils.replaceChars(original, "./\\:*<>|?\"", "-");
+        char[] replace_chars = {'.', '/', '\\', ':', '*', '<', '>', '|', '?', '"'};
+        for(char replace : replace_chars){
+            original = original.replace(replace, '-');
+        }
+        return original;
     }
 }

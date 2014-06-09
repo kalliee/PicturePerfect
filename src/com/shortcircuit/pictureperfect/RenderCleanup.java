@@ -13,9 +13,11 @@ import org.bukkit.scheduler.BukkitRunnable;
 public class RenderCleanup extends BukkitRunnable{
     private PicturePerfect plugin;
     private ImageFetcher fetcher;
+    private RenderWriterReader render_store;
     public RenderCleanup(PicturePerfect plugin){
         this.plugin = plugin;
         fetcher = new ImageFetcher(plugin);
+        render_store = new RenderWriterReader(plugin);
     }
     @SuppressWarnings("deprecation")
     @Override
@@ -41,8 +43,9 @@ public class RenderCleanup extends BukkitRunnable{
                             for(MapRenderer renderer : map.getRenderers()){
                                 if(renderer instanceof ImageMapRenderer){
                                     // Get and add the map's default renderer
-                                    ImageMapRenderer imageRenderer = (ImageMapRenderer)renderer;
-                                    map.addRenderer(imageRenderer.getDefaultMapRenderer());
+                                    //ImageMapRenderer imageRenderer = (ImageMapRenderer)renderer;
+                                    //map.addRenderer(imageRenderer.getDefaultMapRenderer());
+                                    map.addRenderer(render_store.loadRenderer(key));
                                     map.removeRenderer(renderer);
                                 }
                             }
@@ -66,8 +69,9 @@ public class RenderCleanup extends BukkitRunnable{
                             for(MapRenderer renderer : map.getRenderers()){
                                 if(renderer instanceof ImageMapRenderer){
                                     // Get and add the map's default renderer
-                                    ImageMapRenderer imageRenderer = (ImageMapRenderer)renderer;
-                                    map.addRenderer(imageRenderer.getDefaultMapRenderer());
+                                    //ImageMapRenderer imageRenderer = (ImageMapRenderer)renderer;
+                                    //map.addRenderer(imageRenderer.getDefaultMapRenderer());
+                                    map.addRenderer(render_store.loadRenderer(key));
                                     map.removeRenderer(renderer);
                                 }
                             }
@@ -87,7 +91,8 @@ public class RenderCleanup extends BukkitRunnable{
                             for(MapRenderer render : map.getRenderers()){
                                 map.removeRenderer(render);
                                 // Set the new renderer's default map renderer
-                                renderer.setDefaultMapRenderer(render);
+                                //renderer.setDefaultMapRenderer(render);
+                                render_store.saveRenderer(key, render);
                             }
                             map.addRenderer(renderer);
                             // Mark the map as clean
