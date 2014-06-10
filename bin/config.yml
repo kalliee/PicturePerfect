@@ -1,5 +1,0 @@
-# Enable this to reduce server load and bandwidth usage. Image rendering will be split into chunks, rendering only 8 maps at a time (or any value of MapsToRender). Setting MapsToRender to a large number may cause heavy resource usage, and may negate the intended effect of ResourceSaver.
-# Disabling this option will force the cleanup operation to render all dirty maps at once, which is very resource-intensive.
-ResourceSaver:
-  UseResourceSaver: true
-  MapsToRender: 8
